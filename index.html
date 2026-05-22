@@ -77,7 +77,9 @@
             margin-left: 8px;
         }
         .add-user-btn { background-color: #34a853; color: white; }
+        .add-user-btn:hover { background-color: #2b8c44; }
         .del-user-btn { background-color: #fbbc05; color: #333; }
+        .del-user-btn:hover { background-color: #e0a800; }
         
         .user-name {
             font-weight: 500;
@@ -103,7 +105,6 @@
             border: 1px solid #e0e0e0;
         }
         
-        /* 行內按鈕樣式 */
         .row-btn {
             border: none;
             padding: 6px 10px;
@@ -142,7 +143,7 @@
 
 <div class="container">
     <h1>群閎點餐登記表</h1>
-    <div id="loadingStatus" class="loading-status">雲端資料連線中...</div>
+    <div id="loadingStatus" class="loading-status">網頁初始名單載入中...</div>
     
     <table id="orderTable">
         <thead>
@@ -166,62 +167,55 @@
 
 <script>
     // ⚠️ 部署教學完成後，請將您的 Google GAS 網頁應用程式網址貼在下方：
-    const GAS_WEB_APP_URL = "YOUR_GAS_WEB_APP_URL_HERE";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxSCFxnJFi7Yj5rX7y2I9M3S0loowDfvWtwo211FBruPLhdGHupG3Mi5I9wPpu5tqRAHg/exec";
 
-    let orderData = [];
-
-    // 向雲端讀取最新點餐資料
-    function loadCloudData() {
-        showStatus("讀取雲端最新資料中...");
-        if(GAS_WEB_APP_URL.includes("https://script.google.com/macros/s/AKfycbzio3O9NF9hhWGS-VCan_YoINtfECf6MOx_JMFbgTzAoRJ31QlgcVZzynRnwLaohEWXjw/exec")) {
-            // 本地測試預設名單
-            orderData = [
-                { department: "總經理室", members: [{name:"Winnie", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Milly", item:"", sugar:"", ice:"", note:"", locked:false}] },
-                { department: "管理部", members: [{name:"Allen", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Kevin", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Nini", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jeff", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Penny", item:"", sugar:"", ice:"", note:"", locked:false}] },
-                { department: "IA國際認證部", members: [{name:"Eric", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Celest", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jennifer", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Will", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Vanessa", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jaslene", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Kimyen", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Rossi", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Kev", item:"", sugar:"", ice:"", note:"", locked:false}] },
-                { department: "業務部", members: [{name:"Jash", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jojo", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Lori", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Angel", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Budi", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jasmine", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Willis", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Brian", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Anita", item:"", sugar:"", ice:"", note:"", locked:false}] },
-                { department: "技術服務部", members: [{name:"Felix", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Terry", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Rick", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Rover", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Knight", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Reese", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Wenkai", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Danny", item:"", sugar:"", ice:"", note:"", locked:false}] }
-            ];
-            renderTable();
-            showStatus("本地測試模式（未連線雲端）");
-            return;
-        }
-
-        fetch(GAS_WEB_APP_URL + "?action=read")
-            .then(res => res.json())
-            .then(data => {
-                orderData = data;
-                renderTable();
-                showStatus("🟢 雲端資料同步成功");
-            })
-            .catch(err => showStatus("🔴 無法讀取雲端資料: " + err));
-    }
-
-    // 將最新狀態即時儲存至雲端
-    function saveCloudData() {
-        if(GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL_HERE")) return;
-        showStatus("💾 自動儲存至雲端中...");
-        fetch(GAS_WEB_APP_URL, {
-            method: "POST",
-            body: JSON.stringify(orderData)
-        })
-        .then(res => res.text())
-        .then(text => showStatus("🟢 所有變更已即時儲存"))
-        .catch(err => showStatus("🔴 儲存失敗: " + err));
-    }
-
-    function showStatus(msg) {
-        document.getElementById("loadingStatus").innerText = msg;
-    }
+    // 內建 Excel 原始名單（網頁一開啟絕對不會是空白，預設以此為起點）
+    let orderData = [
+        { department: "總經理室", members: [{name:"Winnie", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Milly", item:"", sugar:"", ice:"", note:"", locked:false}] },
+        { department: "管理部", members: [{name:"Allen", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Kevin", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Nini", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jeff", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Penny", item:"", sugar:"", ice:"", note:"", locked:false}] },
+        { department: "IA國際認證部", members: [{name:"Eric", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Celest", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jennifer", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Will", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Vanessa", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jaslene", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Kimyen", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Rossi", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Kev", item:"", sugar:"", ice:"", note:"", locked:false}] },
+        { department: "業務部", members: [{name:"Jash", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jojo", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Lori", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Angel", item:"", sugar:", ice:", note:"", locked:false}, {name:"Budi", item:"", sugar:", ice:", note:"", locked:false}, {name:"Jasmine", item:"", sugar:", ice:", note:"", locked:false}, {name:"Willis", item:"", sugar:", ice:", note:"", locked:false}, {name:"Brian", item:"", sugar:", ice:", note:"", locked:false}, {name:"Anita", item:"", sugar:", ice:", note:"", locked:false}] },
+        { department: "技術服務部", members: [{name:"Felix", item:"", sugar:", ice:", note:"", locked:false}, {name:"Terry", item:"", sugar:", ice:", note:"", locked:false}, {name:"Rick", item:"", sugar:", ice:", note:"", locked:false}, {name:"Rover", item:"", sugar:", ice:", note:"", locked:false}, {name:"Knight", item:"", sugar:", ice:", note:"", locked:false}, {name:"Reese", item:"", sugar:", ice:", note:"", locked:false}, {name:"Wenkai", item:"", sugar:", ice:", note:"", locked:false}, {name:"Danny", item:"", sugar:", ice:", note:"", locked:false}] }
+    ];
 
     const tbody = document.querySelector('#orderTable tbody');
 
+    // 網頁一開啟，立刻「同步」渲染出初始版本畫面，絕不留白
+    function initAndLoad() {
+        renderTable(); 
+        showStatus("本地初始名單載入完畢，正在嘗試同步雲端最新數據...");
+
+        // 如果還沒有設定 GAS 網址，則維持本地名單操作
+        if(GAS_WEB_APP_URL.includes("https://script.google.com/macros/s/AKfycbxSCFxnJFi7Yj5rX7y2I9M3S0loowDfvWtwo211FBruPLhdGHupG3Mi5I9wPpu5tqRAHg/exec")) {
+            showStatus("🟢 本地測試模式（未連線雲端資料庫）");
+            return;
+        }
+
+        // 異步向雲端讀取，若雲端有其他人更新過的紀錄，才進行畫面覆蓋
+        fetch(GAS_WEB_APP_URL + "?action=read")
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    orderData = data;
+                    renderTable();
+                    showStatus("🟢 雲端最新資料同步成功");
+                } else {
+                    showStatus("🟢 雲端資料庫為空，已將初始名單同步至雲端");
+                    saveCloudData();
+                }
+            })
+            .catch(err => {
+                showStatus("⚠️ 無法連線雲端，目前顯示為本地預設內容。錯誤: " + err);
+            });
+    }
+
+    // 渲染表格畫面
     function renderTable() {
         tbody.innerHTML = '';
         let globalIndex = 0;
 
         orderData.forEach((dept, deptIdx) => {
-            // 渲染部門列
+            // 部門橫列 (藍字、粗體)
             const deptRow = document.createElement('tr');
             deptRow.className = 'department-row';
             deptRow.innerHTML = `
@@ -237,7 +231,7 @@
             `;
             tbody.appendChild(deptRow);
 
-            // 渲染人員列
+            // 同仁資料列
             dept.members.forEach((m, mIdx) => {
                 const row = document.createElement('tr');
                 if(m.locked) row.className = 'row-locked';
@@ -262,11 +256,10 @@
         });
     }
 
-    // 當輸入框內容變更時觸發，並隨時儲存
+    // 更新資料並觸發即時儲存
     function updateData(deptIdx, mIdx, field, val, gIdx) {
         orderData[deptIdx].members[mIdx][field] = val;
         
-        // 如果是修改餐點名稱，即時連動變更名字顏色
         if(field === 'item' && gIdx !== undefined) {
             const nameTd = document.getElementById(`name-${gIdx}`);
             if(val.trim() !== "") {
@@ -275,18 +268,33 @@
                 nameTd.className = "user-name status-empty";
             }
         }
-        // 防抖延遲儲存，避免打一個字就送一次請求
+        
+        // 使用防抖機制（延遲 1 秒儲存），避免頻繁發送 API 請求
         clearTimeout(window.saveTimeout);
         window.saveTimeout = setTimeout(saveCloudData, 1000);
     }
 
-    // 按下確認、修改時鎖定或解鎖欄位
+    // 儲存至雲端
+    function saveCloudData() {
+        if(GAS_WEB_APP_URL.includes("https://script.google.com/macros/s/AKfycbxSCFxnJFi7Yj5rX7y2I9M3S0loowDfvWtwo211FBruPLhdGHupG3Mi5I9wPpu5tqRAHg/exec")) return;
+        showStatus("💾 自動同步至雲端中...");
+        fetch(GAS_WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify(orderData)
+        })
+        .then(res => res.text())
+        .then(() => showStatus("🟢 所有更新已即時儲存到雲端"))
+        .catch(err => showStatus("🔴 雲端儲存失敗: " + err));
+    }
+
+    // 鎖定與解鎖
     function lockRow(deptIdx, mIdx, shouldLock) {
         orderData[deptIdx].members[mIdx].locked = shouldLock;
         renderTable();
         saveCloudData();
     }
 
+    // 新增人員
     function addMember(deptIdx) {
         const newName = prompt(`請輸入要新增至【${orderData[deptIdx].department}】的人員姓名：`);
         if (newName && newName.trim() !== "") {
@@ -296,6 +304,7 @@
         }
     }
 
+    // 刪除人員
     function deleteMember(deptIdx) {
         const dept = orderData[deptIdx];
         if (dept.members.length === 0) return alert("已無人員可刪除。");
@@ -316,6 +325,7 @@
         }
     }
 
+    // 全部清除功能
     function confirmClearAll() {
         if (confirm("確定要全部清除嗎？\n這將會清空目前畫面上所有【未鎖定】同仁的填寫欄位。")) {
             orderData.forEach(dept => {
@@ -330,7 +340,12 @@
         }
     }
 
-    window.onload = loadCloudData;
+    function showStatus(msg) {
+        document.getElementById("loadingStatus").innerText = msg;
+    }
+
+    // 網頁載入時啟動
+    window.onload = initAndLoad;
 </script>
 
 </body>
