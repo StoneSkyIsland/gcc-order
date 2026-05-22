@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>群閎點餐登記表 (動態人員管理版)</title>
+    <title>群閎點餐登記表</title>
     <style>
         body {
             font-family: "Microsoft JhengHei", Arial, sans-serif;
@@ -29,12 +29,14 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
+            table-layout: fixed; /* 固定表格佈局以嚴格執行百分比寬度 */
         }
         th, td {
             border: 1px solid #ddd;
             padding: 10px 12px;
             text-align: left;
             vertical-align: middle;
+            word-wrap: break-word;
         }
         th {
             background-color: #f8f9fa;
@@ -88,6 +90,9 @@
         .user-name {
             font-weight: 500;
             transition: color 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         /* 未輸入餐點名稱時：顯示為紅色 */
         .status-empty {
@@ -144,11 +149,11 @@
     <table id="orderTable">
         <thead>
             <tr>
-                <th style="width: 20%;">姓名</th>
-                <th style="width: 30%;">名稱 (餐點品項)</th>
-                <th style="width: 15%;">甜度</th>
-                <th style="width: 15%;">冰量</th>
-                <th style="width: 20%;">備註</th>
+                <th style="width: 10%;">姓名</th>
+                <th style="width: 45%;">名稱 (餐點品項)</th>
+                <th style="width: 7.5%;">甜度</th>
+                <th style="width: 7.5%;">冰量</th>
+                <th style="width: 30%;">備註</th>
             </tr>
         </thead>
         <tbody>
@@ -205,7 +210,7 @@
             headerDiv.innerHTML = `
                 <span class="department-name">${dept.department}</span>
                 <div>
-                    <button class="dept-btn add-user-btn" onclick="addMember(${deptIdx})">+ 新增人員</button>
+                    <button class="dept-btn add-user-btn" onclick="addMember(${deptIdx})">+ 新增人员</button>
                     <button class="dept-btn del-user-btn" onclick="deleteMember(${deptIdx})">- 刪除人員</button>
                 </div>
             `;
@@ -219,9 +224,9 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="user-name status-empty" id="name-${globalMemberIndex}">${member}</td>
-                    <td><input type="text" class="input-field input-item" data-index="${globalMemberIndex}" placeholder="請輸入餐點名稱"></td>
-                    <td><input type="text" class="input-field input-sugar" placeholder="如：正常/半糖/微糖"></td>
-                    <td><input type="text" class="input-field input-ice" placeholder="如：正常/少冰/去冰"></td>
+                    <td><input type="text" class="input-field input-item" data-index="${globalMemberIndex}" placeholder="請輸入餐點完整名稱"></td>
+                    <td><input type="text" class="input-field input-sugar" placeholder="甜度"></td>
+                    <td><input type="text" class="input-field input-ice" placeholder="冰量"></td>
                     <td><input type="text" class="input-field input-note" placeholder="備註要求"></td>
                 `;
                 tbody.appendChild(row);
