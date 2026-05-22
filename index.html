@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>群閎點餐登記表 (動態人員管理版)</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        th {
+            background-color: #f8f9fa;
+            color: #555;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            box-shadow: inset 0 -1px 0 #ddd;
+        }
+        /* 各部門名稱樣式：藍字、粗體 */
+        .department-row {
+            background-color: #eef5fc;
+        }
+        .department-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+        }
+        .department-name {
+            color: #1a73e8;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        /* 部門操作按鈕 */
+        .dept-btn {
+            border: none;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 8px;
+            transition: background-color 0.2s;
+        }
+        .add-user-btn {
+            background-color: #34a853;
+            color: white;
+        }
+        .add-user-btn:hover {
+            background-color: #2b8c44;
+        }
+        .del-user-btn {
+            background-color: #fbbc05;
+            color: #333;
+        }
+        .del-user-btn:hover {
+            background-color: #e0a800;
+        }
+        /* 人員名字基礎樣式 */
+        .user-name {
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        /* 未輸入餐點名稱時：顯示為紅色 */
+        .status-empty {
+            color: #d93025;
+        }
+        /* 有輸入餐點名稱時：顯示為黑色 */
+        .status-filled {
+            color: #000000;
+            font-weight: bold;
+        }
+        /* 輸入欄位樣式 */
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input[type="text"]:focus {
+            border-color: #1a73e8;
+            outline: none;
+            background-color: #fafafa;
+        }
+        .action-container {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        /* 全部清除按鈕 */
+        .clear-btn {
+            background-color: #ea4335;
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .clear-btn:hover {
+            background-color: #c5221f;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>群閎點餐登記表</h1>
+    
+    <table id="orderTable">
+        <thead>
+            <tr>
+                <th style="width: 20%;">姓名</th>
+                <th style="width: 30%;">名稱 (餐點品項)</th>
+                <th style="width: 15%;">甜度</th>
+                <th style="width: 15%;">冰量</th>
+                <th style="width: 20%;">備註</th>
+            </tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
+
+    <div class="action-container">
+        <button class="clear-btn" onclick="confirmClearAll()">全部清除</button>
+    </div>
+</div>
+
+<script>
+    // 初始匯入您 Excel 附件中的部門與人員名單
+    let orderData = [
+        {
+            department: "總經理室",
+            members: ["Winnie", "Milly"]
+        },
+        {
+            department: "管理部",
+            members: ["Allen", "Kevin", "Nini", "Jeff", "Penny"]
+        },
+        {
+            department: "IA國際認證部",
+            members: ["Eric", "Celest", "Jennifer", "Will", "Vanessa", "Jaslene", "Kimyen", "Rossi", "Kev"]
+        },
+        {
+            department: "業務部",
+            members: ["Jash", "Jojo", "Lori", "Angel", "Budi", "Jasmine", "Willis", "Brian", "Anita"]
+        },
+        {
+            department: "技術服務部",
+            members: ["Felix", "Terry", "Rick", "Rover", "Knight", "Reese", "Wenkai", "Danny"]
+        }
+    ];
+
+    const tbody = document.querySelector('#orderTable tbody');
+
+    // 渲染/重構整個表格畫面
+    function renderTable() {
+        tbody.innerHTML = '';
+        let globalMemberIndex = 0;
+
+        orderData.forEach((dept, deptIdx) => {
+            // 1. 建立部門橫列 (包含藍字粗體名稱，以及新增/刪除按鈕)
+            const deptRow = document.createElement('tr');
+            deptRow.className = 'department-row';
+            
+            const td = document.createElement('td');
+            td.setAttribute('colspan', '5');
+            
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'department-header';
+            headerDiv.innerHTML = `
+                <span class="department-name">${dept.department}</span>
+                <div>
+                    <button class="dept-btn add-user-btn" onclick="addMember(${deptIdx})">+ 新增人員</button>
+                    <button class="dept-btn del-user-btn" onclick="deleteMember(${deptIdx})">- 刪除人員</button>
+                </div>
+            `;
+            
+            td.appendChild(headerDiv);
+            deptRow.appendChild(td);
+            tbody.appendChild(deptRow);
+
+            // 2. 插入該部門的人員
+            dept.members.forEach(member => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="user-name status-empty" id="name-${globalMemberIndex}">${member}</td>
+                    <td><input type="text" class="input-field input-item" data-index="${globalMemberIndex}" placeholder="請輸入餐點名稱"></td>
+                    <td><input type="text" class="input-field input-sugar" placeholder="如：正常/半糖/微糖"></td>
+                    <td><input type="text" class="input-field input-ice" placeholder="如：正常/少冰/去冰"></td>
+                    <td><input type="text" class="input-field input-note" placeholder="備註要求"></td>
+                `;
+                tbody.appendChild(row);
+                globalMemberIndex++;
+            });
+        });
+
+        // 重新綁定「名稱」欄位的即時變色事件監聽
+        bindInputEvents();
+    }
+
+    // 綁定餐點輸入框的監聽事件
+    function bindInputEvents() {
+        document.querySelectorAll('.input-item').forEach(input => {
+            input.addEventListener('input', function() {
+                const idx = this.getAttribute('data-index');
+                const nameTd = document.getElementById(`name-${idx}`);
+                if (!nameTd) return;
+                
+                if (this.value.trim() !== "") {
+                    nameTd.classList.remove('status-empty');
+                    nameTd.classList.add('status-filled'); // 有輸入變黑色
+                } else {
+                    nameTd.classList.remove('status-filled');
+                    nameTd.classList.add('status-empty');  // 未輸入維持紅色
+                }
+            });
+        });
+    }
+
+    // 功能：新增人員
+    function addMember(deptIdx) {
+        const newName = prompt(`請輸入要新增至【${orderData[deptIdx].department}】的人員姓名：`);
+        if (newName && newName.trim() !== "") {
+            orderData[deptIdx].members.push(newName.trim());
+            renderTable(); // 重新渲染表格
+        }
+    }
+
+    // 功能：刪除人員
+    function deleteMember(deptIdx) {
+        const dept = orderData[deptIdx];
+        if (dept.members.length === 0) {
+            alert("該部門目前已無人員可刪除。");
+            return;
+        }
+
+        // 列出該部門所有人供使用者挑選
+        let menuString = `請輸入欲刪除的人員編號 (1 ~ ${dept.members.length})：\n`;
+        dept.members.forEach((m, i) => {
+            menuString += `${i + 1}. ${m}\n`;
+        });
+
+        const choice = prompt(menuString);
+        if (choice) {
+            const index = parseInt(choice, 10) - 1;
+            if (!isNaN(index) && index >= 0 && index < dept.members.length) {
+                const confirmed = confirm(`確定要刪除人員【${dept.members[index]}】嗎？`);
+                if (confirmed) {
+                    dept.members.splice(index, 1);
+                    renderTable(); // 重新渲染表格
+                }
+            } else {
+                alert("輸入編號錯誤，未刪除任何人員。");
+            }
+        }
+    }
+
+    // 功能：下方全部清除按鈕（含再次確認功能）
+    function confirmClearAll() {
+        const isConfirmed = confirm("確定要全部清除嗎？\n這將會清空目前畫面上所有人的名稱、甜度、冰量與備註欄位。");
+        
+        if (isConfirmed) {
+            // 清空所有自行輸入欄位
+            document.querySelectorAll('.input-field').forEach(input => {
+                input.value = '';
+            });
+
+            // 將所有人名的顏色重置回紅色
+            document.querySelectorAll('.user-name').forEach(nameTd => {
+                nameTd.classList.remove('status-filled');
+                nameTd.classList.add('status-empty');
+            });
+        }
+    }
+
+    // 網頁開啟時自動初始化
+    window.onload = renderTable;
+</script>
+
+</body>
+</html>
