@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>群閎點餐登記表</title>
+    <title>群閎點餐登記表 (雲端同步鎖定版)</title>
     <style>
         body {
             font-family: "Microsoft JhengHei", Arial, sans-serif;
@@ -175,7 +175,7 @@
         { department: "管理部", members: [{name:"Allen", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Kevin", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Nini", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jeff", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Penny", item:"", sugar:"", ice:"", note:"", locked:false}] },
         { department: "IA國際認證部", members: [{name:"Eric", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Celest", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jennifer", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Will", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Vanessa", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jaslene", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Kimyen", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Rossi", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Kev", item:"", sugar:"", ice:"", note:"", locked:false}] },
         { department: "業務部", members: [{name:"Jash", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jojo", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Lori", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Angel", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Budi", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jasmine", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Willis", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Brian", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Anita", item:"", sugar:"", ice:"", note:"", locked:false}] },
-        { department: "技術服務部", members: [{name:"Felix", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Terry", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Rick", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Rover", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Knight", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Reese", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Wenkai", block:false, name:"Wenkai", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Danny", item:"", sugar:"", ice:"", note:"", locked:false}] }
+        { department: "技術服務部", members: [{name:"Felix", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Terry", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Rick", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Rover", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Knight", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Reese", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Wenkai", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Danny", item:"", sugar:"", ice:"", note:"", locked:false}] }
     ];
 
     const tbody = document.querySelector('#orderTable tbody');
@@ -325,16 +325,21 @@
         }
     }
 
-    // 全部清除功能
+    // ⭐ 修改後的全部清除功能：無視不可修改狀態，強制清空所有欄位並解除鎖定
     function confirmClearAll() {
-        if (confirm("確定要全部清除嗎？\n這將會清空目前畫面上所有【未鎖定】同仁的填寫欄位。")) {
+        if (confirm("確定要全部清除嗎？\n這將會強制清空【所有人（包含已確認鎖定）】的名稱、甜度、冰量與備註欄位，並解除鎖定。")) {
             orderData.forEach(dept => {
                 dept.members.forEach(m => {
-                    if(!m.locked) {
-                        m.item = ""; m.sugar = ""; m.ice = ""; m.note = "";
-                    }
+                    // 強制清空所有欄位
+                    m.item = ""; 
+                    m.sugar = ""; 
+                    m.ice = ""; 
+                    m.note = "";
+                    // 強制解除鎖定狀態
+                    m.locked = false;
                 });
             });
+            // 重新渲染畫面並同步至雲端資料庫
             renderTable();
             saveCloudData();
         }
