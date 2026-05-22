@@ -166,16 +166,16 @@
 </div>
 
 <script>
-    // ⚠️ 部署教學完成後，請將您的 Google GAS 網頁應用程式網址貼在下方：
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxSCFxnJFi7Yj5rX7y2I9M3S0loowDfvWtwo211FBruPLhdGHupG3Mi5I9wPpu5tqRAHg/exec";
+    // 🟢 您的 Google GAS 網頁應用程式網址已成功帶入！
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxA0IgRXQywGLHF5DTpWaUqThUr0SaAx31g-nXT6l2L68dN7wcRXNXCwN1Nlv800osfQw/exec";
 
     // 內建 Excel 原始名單（網頁一開啟絕對不會是空白，預設以此為起點）
     let orderData = [
         { department: "總經理室", members: [{name:"Winnie", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Milly", item:"", sugar:"", ice:"", note:"", locked:false}] },
         { department: "管理部", members: [{name:"Allen", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Kevin", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Nini", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jeff", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Penny", item:"", sugar:"", ice:"", note:"", locked:false}] },
         { department: "IA國際認證部", members: [{name:"Eric", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Celest", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jennifer", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Will", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Vanessa", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jaslene", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Kimyen", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Rossi", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Kev", item:"", sugar:"", ice:"", note:"", locked:false}] },
-        { department: "業務部", members: [{name:"Jash", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jojo", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Lori", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Angel", item:"", sugar:", ice:", note:"", locked:false}, {name:"Budi", item:"", sugar:", ice:", note:"", locked:false}, {name:"Jasmine", item:"", sugar:", ice:", note:"", locked:false}, {name:"Willis", item:"", sugar:", ice:", note:"", locked:false}, {name:"Brian", item:"", sugar:", ice:", note:"", locked:false}, {name:"Anita", item:"", sugar:", ice:", note:"", locked:false}] },
-        { department: "技術服務部", members: [{name:"Felix", item:"", sugar:", ice:", note:"", locked:false}, {name:"Terry", item:"", sugar:", ice:", note:"", locked:false}, {name:"Rick", item:"", sugar:", ice:", note:"", locked:false}, {name:"Rover", item:"", sugar:", ice:", note:"", locked:false}, {name:"Knight", item:"", sugar:", ice:", note:"", locked:false}, {name:"Reese", item:"", sugar:", ice:", note:"", locked:false}, {name:"Wenkai", item:"", sugar:", ice:", note:"", locked:false}, {name:"Danny", item:"", sugar:", ice:", note:"", locked:false}] }
+        { department: "業務部", members: [{name:"Jash", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jojo", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Lori", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Angel", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Budi", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Jasmine", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Willis", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Brian", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Anita", item:"", sugar:"", ice:"", note:"", locked:false}] },
+        { department: "技術服務部", members: [{name:"Felix", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Terry", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Rick", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Rover", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Knight", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Reese", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Wenkai", block:false, name:"Wenkai", item:"", sugar:"", ice:"", note:"", locked:false}, {name:"Danny", item:"", sugar:"", ice:"", note:"", locked:false}] }
     ];
 
     const tbody = document.querySelector('#orderTable tbody');
@@ -185,13 +185,13 @@
         renderTable(); 
         showStatus("本地初始名單載入完畢，正在嘗試同步雲端最新數據...");
 
-        // 如果還沒有設定 GAS 網址，則維持本地名單操作
-        if(GAS_WEB_APP_URL.includes("https://script.google.com/macros/s/AKfycbxSCFxnJFi7Yj5rX7y2I9M3S0loowDfvWtwo211FBruPLhdGHupG3Mi5I9wPpu5tqRAHg/exec")) {
+        // 安全防護判定：若網址未設定正確，則進入本地模式
+        if(!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
             showStatus("🟢 本地測試模式（未連線雲端資料庫）");
             return;
         }
 
-        // 異步向雲端讀取，若雲端有其他人更新過的紀錄，才進行畫面覆蓋
+        // 異步向雲端讀取資料
         fetch(GAS_WEB_APP_URL + "?action=read")
             .then(res => res.json())
             .then(data => {
@@ -200,12 +200,12 @@
                     renderTable();
                     showStatus("🟢 雲端最新資料同步成功");
                 } else {
-                    showStatus("🟢 雲端資料庫為空，已將初始名單同步至雲端");
+                    showStatus("🟢 雲端資料庫目前為空，已成功將初始名單上傳同步");
                     saveCloudData();
                 }
             })
             .catch(err => {
-                showStatus("⚠️ 無法連線雲端，目前顯示為本地預設內容。錯誤: " + err);
+                showStatus("⚠️ 無法連線雲端，目前顯示為本地預設內容。錯誤原因: " + err);
             });
     }
 
@@ -269,14 +269,14 @@
             }
         }
         
-        // 使用防抖機制（延遲 1 秒儲存），避免頻繁發送 API 請求
+        // 防抖機制（延遲 1 秒儲存），避免頻繁發送 API 請求
         clearTimeout(window.saveTimeout);
         window.saveTimeout = setTimeout(saveCloudData, 1000);
     }
 
     // 儲存至雲端
     function saveCloudData() {
-        if(GAS_WEB_APP_URL.includes("https://script.google.com/macros/s/AKfycbxSCFxnJFi7Yj5rX7y2I9M3S0loowDfvWtwo211FBruPLhdGHupG3Mi5I9wPpu5tqRAHg/exec")) return;
+        if(!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) return;
         showStatus("💾 自動同步至雲端中...");
         fetch(GAS_WEB_APP_URL, {
             method: "POST",
